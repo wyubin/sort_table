@@ -1,0 +1,38 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="demo_pkg.min.css">
+</head>
+<body>
+	<main>
+		<h2>Demo page of sort_table</h2>
+		<h4>Your ip information</h4>
+		<div id="sort_table" style="width:400;height:400"></div>
+	</main>
+
+<script src="./demo_pkg.min.js"></script>
+<script>
+var i,t,doms={},view={},func={},t_ajax;
+t=document.querySelectorAll('[id]');
+for(i=0;i<t.length;i++){
+	doms[t[i].id] = t[i];
+}
+// functions
+func.ajax2table = function(r_text){
+	var r_data = JSON.parse(r_text);
+	view.table = new demo_pkg.sort_table(doms.sort_table);
+	view.table.render({colnames:['Title','Value'],
+		data:Object.keys(r_data).map(function(v){return [v,r_data[v]]})
+	});
+}
+// html events
+
+window.onload = function(){
+	// generate form
+	t_ajax = demo_pkg.my_ajax.get_ajax('http://ip-api.com/json',
+		{success:function(v){func.ajax2table(v);}}
+	);
+}
+</script>
+</body>
+</html>
