@@ -1,0 +1,16 @@
+{
+	"name" : "sort_table",
+	"version" : "0.0.1",
+	"style":{
+		"pages/demo_pkg.min.css":[
+			"sort_table.scss"
+		],
+		"sort_table.min.css":[
+			"sort_table.scss"
+		]
+	},
+	"browser":{
+		"pages/demo_pkg.min.js":"pages/demo_pkg.js",
+		"sort_table.min.js":"sort_table.js"
+	}
+}
