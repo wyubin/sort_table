@@ -1,8 +1,9 @@
 module.id='sort_table';
 // general object extend
-require('../../lib/stdlib.array.js');
-require('../../lib/stdlib.HTMLElement.js');
+require('jsStdlib/stdlib.array.js');
+require('jsStdlib/stdlib.HTMLElement.js');
 var extend = require('util')._extend;
+var events_reg = require('spa_tools/events_reg.js');
 
 /**
 * create(new) sortable table view without jquery.
@@ -17,17 +18,19 @@ var sort_table = function (dom,args){
 		th_revise:null,
 		th_sort:true,
 		// tr_render based on data_row and index, return doms list <tr>
-		tr_render:function(tr,ind){return tr.reduce(function(a,b){
-			return a.concat(document.createElement('td').append_by_array([b]));
+		tr_render:function(trs,ind){return trs.reduce(function(a,b){
+			var t_dom = document.createElement('td');
+			t_dom.innerHTML = b;
+			return a.concat(t_dom);
 		},[])},
 		tr_click:false
 	},args);
 	// initial event support type
-	this.events = {click:{},attached:[]};
+	this.e_reg = new events_reg(dom);
 	this.data = {};
 	this.init();
 };
-exports.sort_table = sort_table;
+module.exports = sort_table;
 /**
 * init process sort_table, add class
 */
@@ -35,7 +38,7 @@ sort_table.prototype.init = function(){
 	var self= this;
 	this.init_view();
 	// init event register
-	this.events.click = {
+	this.e_reg.events.click = {
 		'tbody>tr>td':function(e){self.row_selected_handler(e)},
 		'thead>tr>th>div.th-inner':function(e){self.th_sort_handler(e)}
 	};
@@ -56,39 +59,12 @@ sort_table.prototype.init_view = function(){
 	});
 }
 /**
-* event handler for all events listened from doms.body, events list on this.events. this.events
-* @param {object} e - event object from EventListener
-*/
-sort_table.prototype.event_han = function(e){
-	var self=this,
-		t_css;
-	if(e.type in self.events){
-		for(t_css in self.events[e.type]){
-			if(e.target.matches(t_css)){
-				self.events[e.type][t_css](e);
-			}
-		}
-	}
-}
-/**
-* initiate view events when it renders ready
-*/
-sort_table.prototype.set_events = function(){
-	var self = this,i;
-	for(i in this.events){
-		if(this.events.attached.indexOf(i) == -1){
-			this.doms.body.addEventListener(i,function(e){self.event_han(e)});
-			this.events.attached.push(i);
-		}
-	}
-}
-/**
 * table haed render method, based on self.args.col_hide and this.args.th_revise to render the table title
 */
 sort_table.prototype.thead_ren = function(){
 	var self=this;
 	var htmls = this.data.colnames.reduce(function(a,b,ind){
-		if(self.args.col_hide[i]){
+		if(self.args.col_hide[ind]){
 			return a;
 		}else{
 			return a.concat([self.args.th_revise ? self.args.th_revise(b,ind,self.data.colnames):b]);
@@ -97,7 +73,13 @@ sort_table.prototype.thead_ren = function(){
 	// add into thead
 	this.doms.thead.innerHTML = '';
 	this.doms.thead.append_by_array([{name:'tr',child:htmls.map(function(v,ind){
-		return {name:'th',child:[{name:'div',attr:{class:'th-inner'},child:[v]}]};
+		var t_ch = {name:'div',attr:{class:'th-inner'}};
+		if(typeof v == 'string'){
+			t_ch.html = v;
+		}else{
+			t_ch.child = [v];
+		}
+		return {name:'th',child:[t_ch]};
 	})}]);
 }
 /**
@@ -107,10 +89,10 @@ sort_table.prototype.thead_ren = function(){
 */
 sort_table.prototype.thead_align = function(){
 	var a_th_div = Array.prototype.slice.call(this.doms.thead.querySelectorAll('div.th-inner')),
-	wth,wthd;
+		wth,wthd;
 	a_th_div.map(function(v,ind){
-		wth = v.getBoundingClientRect().width;
-		wthd = v.parentNode.getBoundingClientRect().width;
+		wthd = v.getBoundingClientRect().width;
+		wth = v.parentNode.getBoundingClientRect().width;
 		if(wthd>wth){
 			v.parentNode.style.width = wthd;
 		}
@@ -154,11 +136,13 @@ sort_table.prototype.append_rows = function(data){
 */
 sort_table.prototype.render = function(data){
 	var self = this;
+	if(data){
+		this.data=data;
+		this.data.ind_col_show = data.colnames.range().reduce(function(a,b,ind){return self.args.col_hide[ind] ? a : a.concat([ind])},[]);
+	}
 	// add sort_table class to container
 	this.doms.body.classList.add('sort_table');
-	this.data=data;
-	this.data.ind_col_show = data.colnames.range().reduce(function(a,b,ind){return self.args.col_hide[ind] ? a : a.concat([ind])},[]);
-	this.set_events();
+	this.e_reg.register();
 	this.thead_ren();
 	this.doms.tbody.innerHTML='';
 	this.append_rows(this.data.data);
@@ -203,13 +187,23 @@ sort_table.prototype.tr_sort = function(opt){
 	// data sort
 	a_tr.sort(function(a,b){
 		t_comp = [a,b].map(function(v){
-			return opt.fn ? opt.fn(extend({},{dataset:v.dataset},t_args),self.data) : self.data.data[v.dataset.irow][opt.col_ind];
+			return opt.fn ? opt.fn(v,self.data) : self.data.data[v.dataset.irow][opt.col_ind];
 		});
-		return (t_comp[0]>t_comp[1] == opt.reverse) ? 1:-1;
+		return (t_comp[0]>t_comp[1] == (opt.reverse || false)) ? 1:-1;
 	});
 	// re render tbody
 	a_tr.map(function(v){self.doms.tbody.appendChild(v)});
 }
+/**
+* get selected row's original index
+* @return {Array} selected row's original index
+*/
+sort_table.prototype.selected_irows = function(){
+	var tr_sel = Array.prototype.slice.call(this.doms.tbody.querySelectorAll('tr.selected'));
+	return tr_sel.map(function(v){
+		return parseInt(v.dataset.irow);
+	});
+};
 /**
 * the tr selected handler(classed the tr and )
 * @param {object} e - event object from EventListener
@@ -218,10 +212,7 @@ sort_table.prototype.tr_sort = function(opt){
 sort_table.prototype.row_selected_handler = function(e){
 	// classed this tr first
 	e.target.parentNode.classList.toggle('selected');
-	var sel_trs = Array.prototype.slice.call(this.doms.tbody.querySelectorAll('tr.selected'));
-	this.row_sel_call(sel_trs.map(function(v){
-		return parseInt(v.dataset.irow);
-	}));
+	this.row_sel_call(this.selected_irows());
 	return this;
 }
 /**

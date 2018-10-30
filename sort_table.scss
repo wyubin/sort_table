@@ -1,5 +1,5 @@
-$th_color: #808080; /* color of header */
-$r_odd_color: #d1d1d1; /* color of odd row */
+$th_color: #cccccc; /* color of header */
+$r_odd_color: #f2f2f2; /* color of odd row */
 $r_hover_color: #DBDBF8; /* color of hover row */
 $r_selected_color: #a9b7d1;
 $r_sel_hover_color: #A6A6ED;
@@ -15,11 +15,12 @@ $th_height: 30px; /* height of header */
 		top: 0;
 		right: 0;
 		left: 0;
+		z-index: -1;
 	};
 	div.mytable_inner {
 		overflow-x: hidden;
 		overflow-y: auto;
-		#height: 100%;
+		//height: 100%;
 
 		table{
 			width:100%;
@@ -53,7 +54,7 @@ $th_height: 30px; /* height of header */
 					position: absolute;
 					top: 0;
 					border-left: 1px solid;
-					padding-left: 8px;
+					//padding: 3px 8px;
 					line-height: $th_height;
 					text-align: left;
 					cursor: row-resize;

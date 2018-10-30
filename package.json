@@ -1,16 +1,32 @@
 {
-	"name" : "sort_table",
-	"version" : "0.0.1",
-	"style":{
-		"pages/demo_pkg.min.css":[
-			"sort_table.scss"
-		],
-		"sort_table.min.css":[
-			"sort_table.scss"
-		]
-	},
-	"browser":{
-		"pages/demo_pkg.min.js":"pages/demo_pkg.js",
-		"sort_table.min.js":"sort_table.js"
-	}
+  "name": "sort_table",
+  "version": "0.0.1",
+  "style": {
+    "pages/demo_pkg.min.css": [
+      "sort_table.scss"
+    ]
+  },
+  "browser": {
+    "pages/demo_pkg.min.js": "pages/demo_pkg.js"
+  },
+  "description": "A lightweight library for html table generator.",
+  "main": "sort_table.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wyubin/sort_table.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wyubin/sort_table/issues"
+  },
+  "homepage": "https://github.com/wyubin/sort_table#readme",
+  "dependencies": {
+		"spa_tools": "wyubin/spa_tools",
+		"jsStdlib": "wyubin/jsStdlib"
+  }
 }
